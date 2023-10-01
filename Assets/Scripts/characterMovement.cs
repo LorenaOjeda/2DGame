@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class characterMovement : MonoBehaviour
 {
+    public GameObject BulletPrefab;
     public float Speed;
     public float JumpForce;
     private Rigidbody2D Rigidbody2D;
     private float Horizontal;
     private bool Grounded;
+    private float LastShoot;
 
     void Start()
     {
@@ -20,6 +22,9 @@ public class characterMovement : MonoBehaviour
     void Update()
     {
         Horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (Horizontal < 0.0f) transform.localScale = new Vector3(-1.0f, 1.0f, 1.0f);
+        else if (Horizontal > 0.0f) transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
         Debug.DrawRay(transform.position, Vector3.down* 0.1f, Color.red);
 
@@ -34,12 +39,29 @@ public class characterMovement : MonoBehaviour
         {
             Jump();
         }
+        if(Input.GetKey(KeyCode.Space) && Time.time > LastShoot + 0.25f)
+        {
+            Shoot();
+            LastShoot = Time.time;
+        }
     }
 
     private void Jump()
      {
-        Rigidbody2D.AddForce(Vector2.up*JumpForce);
+        Rigidbody2D.AddForce(Vector2.up * JumpForce);
      }
+
+    private void Shoot()
+    {
+
+        Vector3 direction;
+        if(transform.localScale.x == 1.0f) direction = Vector3.right;
+        else direction = Vector3.left;
+
+        GameObject bullet = Instantiate(BulletPrefab, transform.position + direction * 0.1f, Quaternion.identity);
+        bullet.GetComponent<BulletScript>().SetDirection(direction);
+    }
+
     private void FixedUpdate()
      {
         Rigidbody2D.velocity = new Vector2(Horizontal,Rigidbody2D.velocity.y);
